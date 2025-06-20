@@ -167,4 +167,15 @@ if __name__ == "__main__":
     print(f"Akan menyimpan data bersih ke: {os.path.abspath(cleaned_output_path)}")
 
     try:
-        processed_df = preprocess_
+        # INI BARIS KRITIS YANG SEBELUMNYA MUNGKIN TERPOTONG ATAU SALAH KETIK
+        processed_df = preprocess_diabetes_dataset(raw_data_path, save_cleaned_path=cleaned_output_path)
+        print("\nPreprocessing selesai.")
+        
+        # Panggil fungsi pelatihan model setelah preprocessing berhasil
+        train_and_log_diabetes_model(processed_df)
+        print("\nPelatihan dan logging model selesai.")
+
+    except FileNotFoundError:
+        print(f"ERROR: File '{raw_data_path}' tidak ditemukan. Pastikan dataset ada di direktori yang benar.")
+    except Exception as e: # Blok 'except' ini WAJIB ada setelah 'try' jika tidak ada 'finally'
+        print(f"Terjadi kesalahan: {e}")
