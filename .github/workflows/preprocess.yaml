@@ -1,15 +1,23 @@
-name: Preprocess Dataset
+# File: .github/workflows/preprocess.yaml (NAMA TETAP)
+
+name: Preprocess and Train Dataset
 
 on:
   push:
     paths:
-      - 'preprocessing/**'
+      - 'preprocessing/**' # Sekarang mencakup automate_febie.py yang diperbarui
       - 'diabetes_prediction_dataset.csv'
   workflow_dispatch:
 
 jobs:
-  preprocess:
+  preprocess_and_train:
     runs-on: ubuntu-latest
+
+    env:
+      # Pastikan MLFLOW_TRACKING_URI diatur sebagai GitHub Secret
+      MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }} 
+      # Atau jika tidak ada server MLflow (TIDAK disarankan untuk produksi, hanya untuk lokal/test)
+      # MLFLOW_TRACKING_URI: http://localhost:5000 # Contoh, ganti jika perlu
 
     steps:
       - name: Checkout Repository
@@ -22,13 +30,15 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install pandas numpy scikit-learn
+          python -m pip install --upgrade pip
+          pip install pandas numpy scikit-learn mlflow # Tambahkan mlflow
 
-      - name: Run Preprocessing Script
+      - name: Run Preprocessing and Model Training Script
+        # Sekarang script ini akan melakukan preprocessing DAN pelatihan model
         run: python preprocessing/automate_febie.py
 
       - name: Upload Cleaned Dataset
         uses: actions/upload-artifact@v4
         with:
-          name: diabetes_cleaned
+          name: diabetes_cleaned_dataset
           path: preprocessing/diabetes_cleaned.csv
