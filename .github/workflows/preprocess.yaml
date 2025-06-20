@@ -1,43 +1,46 @@
-# File: .github/workflows/preprocess.yaml (NAMA TETAP)
+# File: .github/workflows/preprocess.yaml
 
-name: Preprocess and Train Dataset
+name: Preprocess and Train Diabetes Model
 
 on:
   push:
     paths:
-      - 'preprocessing/**' # Sekarang mencakup automate_febie.py yang diperbarui
+      - 'preprocessing/**' # Perubahan pada automate_febie.py akan memicu workflow
       - 'diabetes_prediction_dataset.csv'
-  workflow_dispatch:
+  workflow_dispatch: # Mengizinkan trigger manual dari UI GitHub Actions
 
 jobs:
   preprocess_and_train:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Menggunakan runner Ubuntu terbaru
 
+    # Define environment variables for MLflow
+    # Ini akan membuat MLflow mencatat ke MLflow Tracking Server Anda
+    # Ganti dengan URI server MLflow Anda (misal: http://your-mlflow-server:5000)
+    # Jika Anda tidak memiliki server, HAPUS BARIS INI. MLflow akan membuat folder 'mlruns' lokal.
     env:
-      # Pastikan MLFLOW_TRACKING_URI diatur sebagai GitHub Secret
       MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }} 
-      # Atau jika tidak ada server MLflow (TIDAK disarankan untuk produksi, hanya untuk lokal/test)
-      # MLFLOW_TRACKING_URI: http://localhost:5000 # Contoh, ganti jika perlu
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3 # Mengambil kode repositori
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v4 # Mengatur lingkungan Python
         with:
-          python-version: '3.10'
+          python-version: '3.10' # Menggunakan Python versi 3.10
 
       - name: Install Dependencies
-        run: |
+        run: | # Menginstal semua library yang dibutuhkan
           python -m pip install --upgrade pip
-          pip install pandas numpy scikit-learn mlflow # Tambahkan mlflow
+          pip install pandas numpy scikit-learn mlflow # PASTIKAN 'mlflow' ADA DAN BENAR DI SINI!
+          pip list # Ini adalah langkah debugging. Akan menampilkan daftar paket yang terinstal.
 
       - name: Run Preprocessing and Model Training Script
-        # Sekarang script ini akan melakukan preprocessing DAN pelatihan model
+        # Script ini sekarang akan memuat diabetes_prediction_dataset.csv,
+        # membersihkannya, dan kemudian melatih model serta mencatatnya ke MLflow.
         run: python preprocessing/automate_febie.py
 
-      - name: Upload Cleaned Dataset
+      - name: Upload Cleaned Dataset as Artifact (GitHub Artifact)
         uses: actions/upload-artifact@v4
         with:
           name: diabetes_cleaned_dataset
