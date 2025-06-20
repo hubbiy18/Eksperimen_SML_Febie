@@ -1,4 +1,4 @@
-# File: preprocessing/automate_febie.py (VERSI DIGABUNG)
+# File: preprocessing/automate_febie.py
 
 import pandas as pd
 import numpy as np
@@ -15,8 +15,17 @@ def preprocess_diabetes_dataset(filepath, save_cleaned_path=None):
     """
     Fungsi untuk memuat dan melakukan preprocessing dataset diabetes.
     
-    ... (kode preprocessing yang sama persis seperti sebelumnya) ...
+    Tahapan preprocessing:
+    1. Load dataset
+    2. Drop duplikat
+    3. Tangani missing values
+    4. Encode data kategorikal
+    5. Deteksi & hapus outlier (Z-score)
+    6. Normalisasi fitur numerik
+    7. Simpan data bersih ke file CSV (opsional)
+    8. Return dataframe bersih
     """
+
     # 1. Load dataset
     df = pd.read_csv(filepath)
     print(f"Data awal: {df.shape[0]} baris, {df.shape[1]} kolom")
@@ -41,19 +50,22 @@ def preprocess_diabetes_dataset(filepath, save_cleaned_path=None):
     print("Fitur kategorikal di-encode.")
 
     # 5. Remove outliers with Z-score (exclude binary/target cols)
-    exclude_cols = ['hypertension', 'heart_disease', 'diabetes', 'gender']
+    exclude_cols = ['hypertension', 'heart_disease', 'diabetes', 'gender'] 
     numeric_cols = df.select_dtypes(include=np.number).columns.difference(exclude_cols)
     
     if not numeric_cols.empty:
         z_scores = df[numeric_cols].apply(zscore)
         initial_rows = df.shape[0]
+        # Filter DataFrame berdasarkan Z-score
         df = df[(np.abs(z_scores) < 3).all(axis=1)]
         print(f"Setelah hapus outlier: {df.shape[0]} baris (dihapus {initial_rows - df.shape[0]} baris)")
     else:
         print("Tidak ada kolom numerik yang cocok untuk deteksi outlier (setelah mengabaikan kolom pengecualian).")
 
+
     # 6. Feature scaling
     features_to_scale = ['age', 'bmi', 'HbA1c_level', 'blood_glucose_level']
+    # Pastikan kolom ada sebelum scaling
     actual_features_to_scale = [f for f in features_to_scale if f in df.columns]
     
     if actual_features_to_scale:
@@ -63,9 +75,13 @@ def preprocess_diabetes_dataset(filepath, save_cleaned_path=None):
     else:
         print("Tidak ada fitur yang cocok untuk scaling.")
 
+
     # 7. Save cleaned dataset
     if save_cleaned_path:
-        os.makedirs(os.path.dirname(save_cleaned_path), exist_ok=True)
+        # Pastikan direktori output ada
+        output_dir = os.path.dirname(save_cleaned_path)
+        if output_dir and not os.path.exists(output_dir):
+            os.makedirs(output_dir)
         df.to_csv(save_cleaned_path, index=False)
         print(f"Data bersih disimpan ke '{save_cleaned_path}'")
 
@@ -151,14 +167,4 @@ if __name__ == "__main__":
     print(f"Akan menyimpan data bersih ke: {os.path.abspath(cleaned_output_path)}")
 
     try:
-        processed_df = preprocess_diabetes_dataset(raw_data_path, save_cleaned_path=cleaned_output_path)
-        print("\nPreprocessing selesai.")
-        
-        # Panggil fungsi pelatihan model setelah preprocessing berhasil
-        train_and_log_diabetes_model(processed_df)
-        print("\nPelatihan dan logging model selesai.")
-
-    except FileNotFoundError:
-        print(f"ERROR: File '{raw_data_path}' tidak ditemukan. Pastikan dataset ada di direktori yang benar.")
-    except Exception as e:
-        print(f"Terjadi kesalahan: {e}")
+        processed_df = preprocess_
